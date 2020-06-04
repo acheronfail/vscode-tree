@@ -1,0 +1,88 @@
+{
+  "name": "vscode-tree",
+  "displayName": "vscode-tree",
+  "description": "Easily create new files in the explorer",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.45.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:vscode-tree.openNote",
+    "onCommand:vscode-tree.newChildNote",
+    "onCommand:vscode-tree.newSiblingNote",
+    "onView:treeView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "treeView.refreshEntry",
+        "title": "Refresh Notes"
+      },
+      {
+        "command": "vscode-tree.newChildNote",
+        "title": "New Child Note"
+      },
+      {
+        "command": "vscode-tree.newSiblingNote",
+        "title": "New Sibling Note"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "treeView.refreshEntry",
+          "when": "view == treeView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vscode-tree.newChildNote",
+          "group": "1_vscode-tree@1"
+        },
+        {
+          "command": "vscode-tree.newSiblingNote",
+          "group": "1_vscode-tree@2"
+        }
+      ]
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "treeView",
+          "name": "Notes"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "watch": "tsc -watch -p ./",
+    "pretest": "yarn run compile && yarn run lint",
+    "test": "node ./out/test/runTest.js"
+  },
+  "dependencies": {
+    "fs-extra": "^8.1.0",
+    "valid-filename": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^8.1.0",
+    "@types/glob": "^7.1.1",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.11.0",
+    "@types/vscode": "^1.45.0",
+    "@typescript-eslint/eslint-plugin": "^2.30.0",
+    "@typescript-eslint/parser": "^2.30.0",
+    "eslint": "^6.8.0",
+    "glob": "^7.1.6",
+    "mocha": "^7.1.2",
+    "typescript": "^3.8.3",
+    "vscode-test": "^1.3.0"
+  }
+}
