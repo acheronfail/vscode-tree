@@ -22,7 +22,6 @@ export class NoteProvider implements TreeDataProvider<Note> {
 
   private constructor(rootNote: Note) {
     this.rootNote = rootNote;
-    (global as any).rootNote = rootNote;
   }
 
   refresh(): void {
