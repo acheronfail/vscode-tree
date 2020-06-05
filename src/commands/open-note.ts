@@ -1,15 +1,27 @@
-import { pathExists, outputFile } from 'fs-extra';
-import vscode, { Uri, TreeItemCollapsibleState } from 'vscode';
+import vscode, { TreeItemCollapsibleState, ExtensionContext } from 'vscode';
 import { Note } from '../note/note';
+import { getActiveNote } from '../extension/workspace-state';
 
-export async function openNote(note: Note) {
-  note.collapsibleState = TreeItemCollapsibleState.Expanded;
+export const openNote = async (note: Note) => {
+  await note.edit();
 
-  // Create note file if it doesn't exist.
-  if (!(await pathExists(note.filePath))) {
-    await outputFile(note.filePath, '');
+  // FIXME: doesn't expand
+  setTimeout(() => {
+    // Reveal in tree view.
+    let currNote: Note | undefined = note;
+    do {
+      currNote.expanded = true;
+    } while ((currNote = currNote.parent));
+
+    vscode.commands.executeCommand('treeView.refresh');
+  }, 1000);
+};
+
+export const openNoteHandler = (context: ExtensionContext) => async (note?: Note) => {
+  if (!note) {
+    note = getActiveNote(context);
   }
 
-  const uri = Uri.parse(`file://${note.filePath}`);
-  await vscode.window.showTextDocument(uri);
-}
+  context.workspaceState.update('activeNote', note);
+  openNote(note);
+};

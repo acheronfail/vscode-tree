@@ -15,7 +15,7 @@
     "onCommand:vscode-tree.newSiblingNote",
     "onView:treeView"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/extension/index.js",
   "contributes": {
     "commands": [
       {
@@ -29,6 +29,10 @@
       {
         "command": "vscode-tree.newSiblingNote",
         "title": "New Sibling Note"
+      },
+      {
+        "command": "vscode-tree.deleteNote",
+        "title": "Delete Note"
       }
     ],
     "menus": {
@@ -47,6 +51,10 @@
         {
           "command": "vscode-tree.newSiblingNote",
           "group": "1_vscode-tree@2"
+        },
+        {
+          "command": "vscode-tree.deleteNote",
+          "group": "2_vscode-tree@1"
         }
       ]
     },

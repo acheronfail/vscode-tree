@@ -1,9 +1,10 @@
 import { Note } from '../note/note';
 import { NewNoteType } from '../types';
 import { openNote } from './open-note';
-import vscode, { TreeItemCollapsibleState } from 'vscode';
+import vscode, { ExtensionContext } from 'vscode';
+import { getActiveNote } from '../extension/workspace-state';
 
-async function newNote(type: NewNoteType, note: Note) {
+const newNote = async (type: NewNoteType, note: Note) => {
   const name = await vscode.window.showInputBox({
     prompt: `Enter note title (under: ${note.name})`,
   });
@@ -22,13 +23,28 @@ async function newNote(type: NewNoteType, note: Note) {
   }
 
   await openNote(newNote);
-  await vscode.commands.executeCommand('treeView.refreshEntry');
-}
+};
 
-export async function newChildNote(note: Note) {
+export const newChildNote = async (note: Note) => {
   return newNote(NewNoteType.Child, note);
-}
+};
 
-export async function newSiblingNote(note: Note) {
+export const newSiblingNote = async (note: Note) => {
   return newNote(NewNoteType.Sibling, note);
-}
+};
+
+export const newChildNoteHandler = (context: ExtensionContext) => async (note?: Note) => {
+  if (!note) {
+    note = getActiveNote(context);
+  }
+
+  return newChildNote(note);
+};
+
+export const newSiblingNoteHandler = (context: ExtensionContext) => async (note?: Note) => {
+  if (!note) {
+    note = getActiveNote(context);
+  }
+
+  return newSiblingNote(note);
+};
