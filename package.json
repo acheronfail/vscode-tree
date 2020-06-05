@@ -19,7 +19,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "treeView.refreshEntry",
+        "command": "treeView.refresh",
         "title": "Refresh Notes"
       },
       {
@@ -38,7 +38,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "treeView.refreshEntry",
+          "command": "treeView.refresh",
           "when": "view == treeView",
           "group": "navigation"
         }

@@ -1,27 +1,27 @@
-import vscode, { TreeItem, TreeItemCollapsibleState, Uri, Command, ExtensionKind } from 'vscode';
+import vscode, { TreeItem, TreeItemCollapsibleState, Uri, Command, ThemeIcon, ExtensionContext } from 'vscode';
 import path from 'path';
 import fs from 'fs-extra';
 import { ConfigEntry } from './config';
 import validFilename from 'valid-filename';
-import { NewNoteType } from '../types';
+import { NewNoteType, WorkspaceStateKey } from '../types';
+import { maxHeaderSize } from 'http';
 
-interface NoteOptions {
+export interface NoteCreateOptions {
+  dirPath: string;
+  context: ExtensionContext;
+  configEntry?: ConfigEntry;
+  parent?: Note;
+}
+
+interface NoteConstructorOptions {
   dirPath: string;
   children: string[];
+  context: ExtensionContext;
   configEntry?: ConfigEntry;
   parent?: Note;
 }
 
 export class Note extends TreeItem {
-  public name: string;
-  public dirPath: string;
-  public filePath: string;
-  public expanded: boolean;
-
-  public parent?: Note;
-  public children: string[];
-  public configEntry?: ConfigEntry;
-
   private static dirName(name: string) {
     if (!validFilename(name)) {
       // TODO: show error to user?
@@ -34,7 +34,9 @@ export class Note extends TreeItem {
   // NOTE: convention is that:
   //  - every file has a directory
   //  - the file name is `$NAME.md` and directory is `$NAME.md.d`
-  public static async create(dirPath: string, configEntry?: ConfigEntry, parent?: Note) {
+  public static async create(options: NoteCreateOptions) {
+    const { dirPath, configEntry, parent, context } = options;
+
     await fs.mkdirs(dirPath);
 
     const entryNames = await fs.readdir(dirPath);
@@ -60,13 +62,25 @@ export class Note extends TreeItem {
     const entries = entriesWithNulls.filter<string>((Boolean as any) as (x: any) => x is string);
     return new Note({
       dirPath,
+      context,
       children: entries,
       configEntry,
       parent,
     });
   }
 
-  private constructor(options: NoteOptions) {
+  public name: string;
+  public dirPath: string;
+  public filePath: string;
+  public expanded: boolean;
+
+  public parent?: Note;
+  public children: string[];
+  public configEntry?: ConfigEntry;
+
+  private context: ExtensionContext;
+
+  private constructor(options: NoteConstructorOptions) {
     const fileName = path.basename(options.dirPath, '.d');
     const filePath = path.join(path.dirname(options.dirPath), fileName);
     const noteName = path.basename(fileName, '.md');
@@ -88,6 +102,7 @@ export class Note extends TreeItem {
         : TreeItemCollapsibleState.None,
     );
 
+    this.context = options.context;
     this.expanded = isExpanded;
     this.name = noteName;
     this.dirPath = options.dirPath;
@@ -108,12 +123,20 @@ export class Note extends TreeItem {
 
   async newChild(name: string) {
     const dirPath = path.join(this.dirPath, Note.dirName(name));
-    return await Note.create(dirPath, undefined, this);
+    return await Note.create({
+      dirPath,
+      parent: this,
+      context: this.context,
+    });
   }
 
   async newSibling(name: string) {
     const dirPath = path.join(path.dirname(this.dirPath), Note.dirName(name));
-    return await Note.create(dirPath, undefined, this.parent);
+    return await Note.create({
+      dirPath,
+      parent: this.parent,
+      context: this.context,
+    });
   }
 
   get command(): Command {
@@ -124,6 +147,23 @@ export class Note extends TreeItem {
     };
   }
 
+  get id(): string {
+    return this.filePath;
+  }
+
+  get iconPath(): ThemeIcon {
+    const activeNoteFilePath = this.context.workspaceState.get<string>(WorkspaceStateKey.ActiveNoteFilePath);
+    if (activeNoteFilePath === this.filePath) {
+      return new ThemeIcon('open-preview');
+    }
+
+    return new ThemeIcon('note');
+  }
+
+  get tooltip(): string {
+    return this.filePath;
+  }
+
   get resourceUri(): Uri {
     return Uri.parse(`file://${this.filePath}`);
   }
@@ -131,7 +171,7 @@ export class Note extends TreeItem {
   async edit() {
     // Create note file if it doesn't exist.
     await fs.ensureFile(this.filePath);
-    const editor = await vscode.window.showTextDocument(this.resourceUri);
+    await vscode.window.showTextDocument(this.resourceUri);
   }
 
   async childrenAsNotes(): Promise<Note[]> {
@@ -142,7 +182,12 @@ export class Note extends TreeItem {
 
     return await Promise.all(
       this.children.map(async dirPath => {
-        return await Note.create(dirPath, configEntryChildrenMap[dirPath], this);
+        return await Note.create({
+          dirPath,
+          configEntry: configEntryChildrenMap[dirPath],
+          parent: this,
+          context: this.context,
+        });
       }),
     );
   }

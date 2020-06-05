@@ -1,6 +1,7 @@
-import vscode, { TreeItemCollapsibleState, ExtensionContext } from 'vscode';
+import vscode, { ExtensionContext } from 'vscode';
 import { Note } from '../note/note';
 import { getActiveNote } from '../extension/workspace-state';
+import { COMMAND_TREEVIEW_REFRESH } from '../types';
 
 export const openNote = async (note: Note) => {
   await note.edit();
@@ -13,7 +14,7 @@ export const openNote = async (note: Note) => {
       currNote.expanded = true;
     } while ((currNote = currNote.parent));
 
-    vscode.commands.executeCommand('treeView.refresh');
+    vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
   }, 1000);
 };
 

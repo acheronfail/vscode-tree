@@ -1,9 +1,10 @@
 import { ExtensionContext, TextEditor } from 'vscode';
 import { Note } from '../note/note';
-import { WorkspaceStateKey } from '../types';
+import { WorkspaceStateKey, COMMAND_TREEVIEW_REFRESH } from '../types';
+import vscode from 'vscode';
 
 export function getActiveNote(context: ExtensionContext) {
-  const note = context.workspaceState.get<Note>(WorkspaceStateKey.ActiveNote);
+  const note = context.workspaceState.get<Note>(WorkspaceStateKey.ActiveNoteFilePath);
   if (!note) {
     // TODO: show error to user?
     throw new Error('Failed to find active note!');
@@ -12,31 +13,28 @@ export function getActiveNote(context: ExtensionContext) {
   return note;
 }
 
-export const updateActiveNoteHandler = (context: ExtensionContext) => async (editor?: TextEditor) => {
+export const updateActiveNoteHandler = (context: ExtensionContext, rootNote: Note) => async (editor?: TextEditor) => {
   const fsPath = editor?.document.uri.fsPath;
   if (!fsPath) {
-    return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
-  }
-
-  // Get the root note.
-  let note = context.workspaceState.get<Note>(WorkspaceStateKey.RootNote);
-  if (!note) {
-    return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
+    return context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, undefined);
   }
 
   // Is the file within the root note directory?
-  if (!fsPath.startsWith(note.dirPath)) {
-    return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
+  if (!fsPath.startsWith(rootNote.dirPath)) {
+    return context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, undefined);
   }
 
   // Quick tree search to find active note.
+  let note: Note | undefined = rootNote;
   while (note) {
     const children: Note[] = await note.childrenAsNotes();
     note = children.find((n: Note): boolean => fsPath.startsWith(n.dirPath) || fsPath === n.filePath);
     if (note?.filePath === fsPath) {
-      return context.workspaceState.update(WorkspaceStateKey.ActiveNote, note);
+      context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, note.filePath);
+      vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+      return;
     }
   }
 
-  return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
+  return context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, undefined);
 };

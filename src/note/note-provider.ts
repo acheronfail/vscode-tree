@@ -1,9 +1,9 @@
 import { Note } from './note';
-import vscode, { TreeDataProvider, TreeItem } from 'vscode';
+import vscode, { TreeDataProvider, TreeItem, ExtensionContext } from 'vscode';
 import { readConfigEntry } from './config';
 
 export class NoteProvider implements TreeDataProvider<Note> {
-  public static async create() {
+  public static async create(context: ExtensionContext) {
     const { rootPath } = vscode.workspace;
     if (!rootPath) {
       vscode.window.showInformationMessage('Please open a directory!');
@@ -11,16 +11,18 @@ export class NoteProvider implements TreeDataProvider<Note> {
     }
 
     const configEntry = await readConfigEntry(rootPath);
-    const rootNote = await Note.create(rootPath, configEntry);
-    return new NoteProvider(rootNote);
+    const rootNote = await Note.create({ dirPath: rootPath, configEntry, context });
+    return new NoteProvider(context, rootNote);
   }
 
   private _onDidChangeTreeData: vscode.EventEmitter<Note | undefined> = new vscode.EventEmitter<Note | undefined>();
   readonly onDidChangeTreeData: vscode.Event<Note | undefined> = this._onDidChangeTreeData.event;
 
+  public readonly context: ExtensionContext;
   public readonly rootNote: Note;
 
-  private constructor(rootNote: Note) {
+  private constructor(context: ExtensionContext, rootNote: Note) {
+    this.context = context;
     this.rootNote = rootNote;
   }
 
