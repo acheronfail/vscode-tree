@@ -1,9 +1,11 @@
 import vscode from 'vscode';
 import { openNoteHandler } from '../commands/open-note';
-import { newChildNoteHandler, newSiblingNoteHandler } from '../commands/new-note';
 import { NoteProvider } from '../note/note-provider';
 import { deleteNoteHandler } from '../commands/delete-note';
 import { updateActiveNoteHandler } from './workspace-state';
+import { newChildNoteHandler } from '../commands/new-child-note';
+import { newSiblingNoteHandler } from '../commands/new-sibling-note';
+import { WorkspaceStateKey } from '../types';
 
 // TODO: https://github.com/mushanshitiancai/vscode-paste-image
 
@@ -13,7 +15,7 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.window.registerTreeDataProvider('treeView', noteProvider);
 
   // Set rootNote in workspace state.
-  context.workspaceState.update('rootNote', noteProvider.rootNote);
+  context.workspaceState.update(WorkspaceStateKey.RootNote, noteProvider.rootNote);
 
   // Register commands.
   context.subscriptions.push(
@@ -26,7 +28,9 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   // Ensure `activeNote` stays updated.
-  vscode.window.onDidChangeActiveTextEditor(updateActiveNoteHandler(context));
+  const changeActiveTextEditorHandler = updateActiveNoteHandler(context);
+  vscode.window.onDidChangeActiveTextEditor(changeActiveTextEditorHandler);
+  changeActiveTextEditorHandler(vscode.window.activeTextEditor);
 }
 
 export function deactivate() {}

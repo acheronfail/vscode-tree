@@ -1,50 +1,24 @@
 import { Note } from '../note/note';
 import { NewNoteType } from '../types';
 import { openNote } from './open-note';
-import vscode, { ExtensionContext } from 'vscode';
-import { getActiveNote } from '../extension/workspace-state';
+import vscode from 'vscode';
 
-const newNote = async (type: NewNoteType, note: Note) => {
-  const name = await vscode.window.showInputBox({
-    prompt: `Enter note title (under: ${note.name})`,
-  });
+function newNotePrompt(type: NewNoteType, note: Note) {
+  switch (type) {
+    case NewNoteType.Child:
+      return `New Child (of ${note.name}) Title:`;
+    case NewNoteType.Sibling:
+      return `New Sibling (of ${note.name}) Title:`;
+  }
+}
+
+export const newNote = async (type: NewNoteType, note: Note) => {
+  const prompt = newNotePrompt(type, note);
+  const name = await vscode.window.showInputBox({ prompt });
   if (!name) {
     return;
   }
 
-  let newNote: Note;
-  switch (type) {
-    case NewNoteType.Child:
-      newNote = await note.newChild(name);
-      break;
-    case NewNoteType.Sibling:
-      newNote = await note.newSibling(name);
-      break;
-  }
-
+  const newNote = await note.newNote(type, name);
   await openNote(newNote);
-};
-
-export const newChildNote = async (note: Note) => {
-  return newNote(NewNoteType.Child, note);
-};
-
-export const newSiblingNote = async (note: Note) => {
-  return newNote(NewNoteType.Sibling, note);
-};
-
-export const newChildNoteHandler = (context: ExtensionContext) => async (note?: Note) => {
-  if (!note) {
-    note = getActiveNote(context);
-  }
-
-  return newChildNote(note);
-};
-
-export const newSiblingNoteHandler = (context: ExtensionContext) => async (note?: Note) => {
-  if (!note) {
-    note = getActiveNote(context);
-  }
-
-  return newSiblingNote(note);
 };

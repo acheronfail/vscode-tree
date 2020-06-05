@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { ConfigEntry } from './config';
 import validFilename from 'valid-filename';
+import { NewNoteType } from '../types';
 
 interface NoteOptions {
   dirPath: string;
@@ -94,6 +95,15 @@ export class Note extends TreeItem {
     this.configEntry = options.configEntry;
     this.children = sortedChildren;
     this.parent = options.parent;
+  }
+
+  async newNote(type: NewNoteType, name: string) {
+    switch (type) {
+      case NewNoteType.Child:
+        return this.newChild(name);
+      case NewNoteType.Sibling:
+        return this.newSibling(name);
+    }
   }
 
   async newChild(name: string) {
