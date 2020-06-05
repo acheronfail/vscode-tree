@@ -3,8 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { ConfigEntry } from './config';
 import validFilename from 'valid-filename';
-import { NewNoteType, WorkspaceStateKey } from '../types';
-import { maxHeaderSize } from 'http';
+import { NewNoteType, WorkspaceStateKey, ICONS } from '../types';
 
 export interface NoteCreateOptions {
   dirPath: string;
@@ -73,6 +72,7 @@ export class Note extends TreeItem {
   public dirPath: string;
   public filePath: string;
   public expanded: boolean;
+  public depth: number;
 
   public parent?: Note;
   public children: string[];
@@ -110,6 +110,9 @@ export class Note extends TreeItem {
     this.configEntry = options.configEntry;
     this.children = sortedChildren;
     this.parent = options.parent;
+
+    const parentDepth = options.parent?.depth || 0;
+    this.depth = parentDepth + 1;
   }
 
   async newNote(type: NewNoteType, name: string) {
@@ -154,24 +157,23 @@ export class Note extends TreeItem {
   get iconPath(): ThemeIcon {
     const activeNoteFilePath = this.context.workspaceState.get<string>(WorkspaceStateKey.ActiveNoteFilePath);
     if (activeNoteFilePath === this.filePath) {
-      return new ThemeIcon('open-preview');
+      return ICONS.PREVIEW;
     }
 
-    return new ThemeIcon('note');
+    const iconKey = `NOTE_${this.depth % ICONS.NOTE_NUMBER}` as keyof typeof ICONS;
+    return ICONS[iconKey];
   }
 
   get tooltip(): string {
     return this.filePath;
   }
 
-  get resourceUri(): Uri {
-    return Uri.parse(`file://${this.filePath}`);
-  }
-
   async edit() {
     // Create note file if it doesn't exist.
     await fs.ensureFile(this.filePath);
-    await vscode.window.showTextDocument(this.resourceUri);
+
+    const filePathUri = Uri.parse(this.filePath);
+    await vscode.window.showTextDocument(filePathUri);
   }
 
   async childrenAsNotes(): Promise<Note[]> {
