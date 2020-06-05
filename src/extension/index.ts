@@ -3,7 +3,7 @@ import { openNoteHandler } from '../commands/open-note';
 import { newChildNoteHandler, newSiblingNoteHandler } from '../commands/new-note';
 import { NoteProvider } from '../note/note-provider';
 import { deleteNoteHandler } from '../commands/delete-note';
-import { Note } from '../note/note';
+import { updateActiveNoteHandler } from './workspace-state';
 
 // TODO: https://github.com/mushanshitiancai/vscode-paste-image
 
@@ -26,34 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   // Ensure `activeNote` stays updated.
-  vscode.window.onDidChangeActiveTextEditor(async editor => {
-    const fileName = editor?.document.fileName;
-    console.log('fileName', fileName);
-    if (!fileName) {
-      context.workspaceState.update('activeNote', undefined);
-      return;
-    }
-
-    let note: Note | undefined = noteProvider.rootNote;
-
-    // Is the file within the root note directory?
-    if (!fileName.startsWith(note.dirPath)) {
-      context.workspaceState.update('activeNote', undefined);
-      return;
-    }
-
-    // Quick tree search to find active note.
-    while (note) {
-      const children: Note[] = await note.childrenAsNotes();
-      note = children.find((n: Note): boolean => fileName.startsWith(n.dirPath) || fileName === n.filePath);
-      if (note?.filePath === fileName) {
-        context.workspaceState.update('activeNote', note);
-        return;
-      }
-    }
-
-    context.workspaceState.update('activeNote', undefined);
-  });
+  vscode.window.onDidChangeActiveTextEditor(updateActiveNoteHandler(context));
 }
 
 export function deactivate() {}
