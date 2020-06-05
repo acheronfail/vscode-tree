@@ -22,6 +22,5 @@ export const openNoteHandler = (context: ExtensionContext) => async (note?: Note
     note = getActiveNote(context);
   }
 
-  context.workspaceState.update('activeNote', note);
   openNote(note);
 };
