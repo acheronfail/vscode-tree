@@ -13,34 +13,30 @@ export function getActiveNote(context: ExtensionContext) {
 }
 
 export const updateActiveNoteHandler = (context: ExtensionContext) => async (editor?: TextEditor) => {
-  const fileName = editor?.document.fileName;
-  if (!fileName) {
-    context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
-    return;
+  const fsPath = editor?.document.uri.fsPath;
+  if (!fsPath) {
+    return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
   }
 
   // Get the root note.
   let note = context.workspaceState.get<Note>(WorkspaceStateKey.RootNote);
   if (!note) {
-    context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
-    return;
+    return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
   }
 
   // Is the file within the root note directory?
-  if (!fileName.startsWith(note.dirPath)) {
-    context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
-    return;
+  if (!fsPath.startsWith(note.dirPath)) {
+    return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
   }
 
   // Quick tree search to find active note.
   while (note) {
     const children: Note[] = await note.childrenAsNotes();
-    note = children.find((n: Note): boolean => fileName.startsWith(n.dirPath) || fileName === n.filePath);
-    if (note?.filePath === fileName) {
-      context.workspaceState.update(WorkspaceStateKey.ActiveNote, note);
-      return;
+    note = children.find((n: Note): boolean => fsPath.startsWith(n.dirPath) || fsPath === n.filePath);
+    if (note?.filePath === fsPath) {
+      return context.workspaceState.update(WorkspaceStateKey.ActiveNote, note);
     }
   }
 
-  context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
+  return context.workspaceState.update(WorkspaceStateKey.ActiveNote, undefined);
 };
