@@ -1,8 +1,6 @@
 import { Note } from './note';
 import vscode, { TreeDataProvider, TreeItem } from 'vscode';
-import path from 'path';
-import fs from 'fs-extra';
-import { CONFIG_FILE_NAME, ConfigEntry } from './config';
+import { readConfigEntry } from './config';
 
 export class NoteProvider implements TreeDataProvider<Note> {
   public static async create() {
@@ -12,12 +10,7 @@ export class NoteProvider implements TreeDataProvider<Note> {
       throw new Error('A workspace root is required');
     }
 
-    const configEntryPath = path.join(rootPath, CONFIG_FILE_NAME);
-    if (!(await fs.pathExists(configEntryPath))) {
-      await fs.outputJson(configEntryPath, { path: rootPath, children: [] });
-    }
-
-    const configEntry = await fs.readJson(configEntryPath);
+    const configEntry = await readConfigEntry(rootPath);
     const rootNote = await Note.create(rootPath, configEntry);
     return new NoteProvider(rootNote);
   }
