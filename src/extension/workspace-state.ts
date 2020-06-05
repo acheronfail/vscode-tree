@@ -31,6 +31,7 @@ export const updateActiveNoteHandler = (context: ExtensionContext, rootNote: Not
     note = children.find((n: Note): boolean => fsPath.startsWith(n.dirPath) || fsPath === n.filePath);
     if (note?.filePath === fsPath) {
       context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, note.filePath);
+      // FIXME: fire this even when clearing the state
       vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
       return;
     }

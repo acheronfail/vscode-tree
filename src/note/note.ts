@@ -1,14 +1,14 @@
 import vscode, { TreeItem, TreeItemCollapsibleState, Uri, Command, ThemeIcon, ExtensionContext } from 'vscode';
 import path from 'path';
 import fs from 'fs-extra';
-import { ConfigEntry } from './config';
+import { Config } from './config';
 import validFilename from 'valid-filename';
 import { NewNoteType, WorkspaceStateKey, ICONS } from '../types';
 
 export interface NoteCreateOptions {
   dirPath: string;
   context: ExtensionContext;
-  configEntry?: ConfigEntry;
+  config: Config;
   parent?: Note;
 }
 
@@ -16,7 +16,7 @@ interface NoteConstructorOptions {
   dirPath: string;
   children: string[];
   context: ExtensionContext;
-  configEntry?: ConfigEntry;
+  config: Config;
   parent?: Note;
 }
 
@@ -34,7 +34,7 @@ export class Note extends TreeItem {
   //  - every file has a directory
   //  - the file name is `$NAME.md` and directory is `$NAME.md.d`
   public static async create(options: NoteCreateOptions) {
-    const { dirPath, configEntry, parent, context } = options;
+    const { dirPath, config, parent, context } = options;
 
     await fs.mkdirs(dirPath);
 
@@ -63,7 +63,7 @@ export class Note extends TreeItem {
       dirPath,
       context,
       children: entries,
-      configEntry,
+      config,
       parent,
     });
   }
@@ -76,7 +76,7 @@ export class Note extends TreeItem {
 
   public parent?: Note;
   public children: string[];
-  public configEntry?: ConfigEntry;
+  public config: Config;
 
   private context: ExtensionContext;
 
@@ -84,15 +84,16 @@ export class Note extends TreeItem {
     const fileName = path.basename(options.dirPath, '.d');
     const filePath = path.join(path.dirname(options.dirPath), fileName);
     const noteName = path.basename(fileName, '.md');
-    const isExpanded = options.configEntry?.open || false;
+
+    const configEntry = options.config.sort[options.dirPath];
 
     // Sort children according to config entry.
     const fsChildren = new Set(options.children);
-    const sortedChildren = (options.configEntry?.children || [])
-      .filter(cEntry => fsChildren.delete(cEntry.path))
-      .map(cEntry => cEntry.path)
+    const sortedChildren = (configEntry?.children || [])
+      .filter(p => fsChildren.delete(p))
       .concat(...fsChildren.values());
 
+    const isExpanded = configEntry?.open || false;
     super(
       noteName,
       sortedChildren.length
@@ -107,7 +108,7 @@ export class Note extends TreeItem {
     this.name = noteName;
     this.dirPath = options.dirPath;
     this.filePath = filePath;
-    this.configEntry = options.configEntry;
+    this.config = options.config;
     this.children = sortedChildren;
     this.parent = options.parent;
 
@@ -130,6 +131,7 @@ export class Note extends TreeItem {
       dirPath,
       parent: this,
       context: this.context,
+      config: this.config,
     });
   }
 
@@ -139,6 +141,7 @@ export class Note extends TreeItem {
       dirPath,
       parent: this.parent,
       context: this.context,
+      config: this.config,
     });
   }
 
@@ -177,16 +180,11 @@ export class Note extends TreeItem {
   }
 
   async childrenAsNotes(): Promise<Note[]> {
-    const configEntryChildrenMap = (this.configEntry?.children || []).reduce<Record<string, ConfigEntry>>((r, e) => {
-      r[e.path] = e;
-      return r;
-    }, {});
-
     return await Promise.all(
       this.children.map(async dirPath => {
         return await Note.create({
           dirPath,
-          configEntry: configEntryChildrenMap[dirPath],
+          config: this.config,
           parent: this,
           context: this.context,
         });
@@ -212,5 +210,17 @@ export class Note extends TreeItem {
         await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
       }
     }
+  }
+
+  updateConfigEntry() {
+    const { config, dirPath, expanded, children } = this;
+    if (!config.sort[dirPath]) {
+      config.sort[dirPath] = {
+        open: expanded,
+        children: [],
+      };
+    }
+
+    config.sort[dirPath]!.children = children.slice();
   }
 }

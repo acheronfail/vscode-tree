@@ -10,12 +10,20 @@ export enum WorkspaceStateKey {
   ActiveNoteFilePath = 'ActiveNoteFilePath',
 }
 
+// NOTE: these values need to match up with those in package.json.
+
 export const EXTENSION_ID = 'vscode-tree';
 
 export const COMMAND_OPEN_NOTE = `${EXTENSION_ID}.openNote`;
 export const COMMAND_NEW_CHILD_NOTE = `${EXTENSION_ID}.newChildNote`;
 export const COMMAND_NEW_SIBLING_NOTE = `${EXTENSION_ID}.newSiblingNote`;
 export const COMMAND_DELETE_NOTE = `${EXTENSION_ID}.deleteNote`;
+export const COMMAND_MOVE_TOP_PARENT = `${EXTENSION_ID}.moveTopParent`;
+export const COMMAND_MOVE_BOTTOM_PARENT = `${EXTENSION_ID}.moveBottomParent`;
+export const COMMAND_MOVE_OUT = `${EXTENSION_ID}.moveOut`;
+export const COMMAND_MOVE_IN = `${EXTENSION_ID}.moveIn`;
+export const COMMAND_MOVE_UP = `${EXTENSION_ID}.moveUp`;
+export const COMMAND_MOVE_DOWN = `${EXTENSION_ID}.moveDown`;
 
 export const TREEVIEW_ID = 'treeView';
 export const COMMAND_TREEVIEW_REFRESH = `${TREEVIEW_ID}.refresh`;

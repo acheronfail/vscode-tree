@@ -20,7 +20,8 @@
     "commands": [
       {
         "command": "treeView.refresh",
-        "title": "Refresh Notes"
+        "title": "Refresh Notes",
+        "icon": "$(refresh)"
       },
       {
         "command": "vscode-tree.newChildNote",
@@ -33,6 +34,36 @@
       {
         "command": "vscode-tree.deleteNote",
         "title": "Delete Note"
+      },
+      {
+        "command": "vscode-tree.moveOut",
+        "title": "Move Out",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "vscode-tree.moveIn",
+        "title": "Move In",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "vscode-tree.moveTopParent",
+        "title": "Move to Top of Parent",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "vscode-tree.moveBottomParent",
+        "title": "Move to Bottom of Parent",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "vscode-tree.moveUp",
+        "title": "Move Up",
+        "icon": "$(chevron-up)"
+      },
+      {
+        "command": "vscode-tree.moveDown",
+        "title": "Move Down",
+        "icon": "$(chevron-down)"
       }
     ],
     "menus": {
@@ -55,6 +86,36 @@
         {
           "command": "vscode-tree.deleteNote",
           "group": "2_vscode-tree@1"
+        },
+        {
+          "command": "vscode-tree.moveOut",
+          "when": "view == treeView",
+          "group": "inline@1"
+        },
+        {
+          "command": "vscode-tree.moveTopParent",
+          "when": "view == treeView",
+          "group": "inline@2"
+        },
+        {
+          "command": "vscode-tree.moveUp",
+          "when": "view == treeView",
+          "group": "inline@3"
+        },
+        {
+          "command": "vscode-tree.moveDown",
+          "when": "view == treeView",
+          "group": "inline@4"
+        },
+        {
+          "command": "vscode-tree.moveBottomParent",
+          "when": "view == treeView",
+          "group": "inline@5"
+        },
+        {
+          "command": "vscode-tree.moveIn",
+          "when": "view == treeView",
+          "group": "inline@6"
         }
       ]
     },
