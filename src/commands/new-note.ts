@@ -1,6 +1,5 @@
 import { Note } from '../note/note';
 import { NewNoteType } from '../types';
-import { openNote } from './open-note';
 import vscode from 'vscode';
 
 function newNotePrompt(type: NewNoteType, note: Note) {
@@ -21,7 +20,7 @@ export const newNote = async (type: NewNoteType, note: Note, open = true) => {
 
   const newNote = await note.newNote(type, name);
   if (open) {
-    await openNote(newNote);
+    await note.edit();
   }
 
   return newNote;

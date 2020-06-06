@@ -75,7 +75,6 @@ export class Note extends TreeItem {
   public name: string;
   public dirPath: string;
   public filePath: string;
-  public expanded: boolean;
   public depth: number;
 
   public parent?: Note;
@@ -97,18 +96,16 @@ export class Note extends TreeItem {
       .filter(p => fsChildren.delete(p))
       .concat(...fsChildren.values());
 
-    const isExpanded = configEntry?.open || false;
     super(
       noteName,
       sortedChildren.length
-        ? isExpanded
+        ? configEntry?.open || false
           ? TreeItemCollapsibleState.Expanded
           : TreeItemCollapsibleState.Collapsed
         : TreeItemCollapsibleState.None,
     );
 
     this.context = options.context;
-    this.expanded = isExpanded;
     this.name = noteName;
     this.dirPath = options.dirPath;
     this.filePath = filePath;
@@ -187,6 +184,9 @@ export class Note extends TreeItem {
 
     const filePathUri = Uri.parse(this.filePath);
     await vscode.window.showTextDocument(filePathUri);
+
+    this.collapsibleState = TreeItemCollapsibleState.Expanded;
+    vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
   }
 
   async childrenAsNotes(): Promise<Note[]> {
@@ -230,6 +230,7 @@ export class Note extends TreeItem {
       );
     }
 
+    // FIXME: when moving in this seems to cop rather than rename?
     await vscode.workspace.fs.rename(Uri.parse(this.dirPath), Uri.parse(newDirPath));
     await vscode.workspace.fs.rename(Uri.parse(this.filePath), Uri.parse(newFilePath));
 
@@ -271,10 +272,10 @@ export class Note extends TreeItem {
 
   // TODO: when do _save_ config to disk?
   updateConfigEntry() {
-    const { config, dirPath, expanded, children } = this;
+    const { config, dirPath, collapsibleState, children } = this;
     if (!config.sort[dirPath]) {
       config.sort[dirPath] = {
-        open: expanded,
+        open: collapsibleState === TreeItemCollapsibleState.Expanded,
         children: [],
       };
     }

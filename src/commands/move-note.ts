@@ -1,5 +1,5 @@
 import { Note } from '../note/note';
-import vscode, { ExtensionContext, Command } from 'vscode';
+import vscode, { ExtensionContext, Command, TreeItemCollapsibleState } from 'vscode';
 import * as constants from '../types';
 import { getActiveNote } from '../extension/workspace-state';
 import { newNote } from './new-note';
@@ -25,7 +25,7 @@ async function moveIn(note: Note) {
     return;
   }
 
-  newParent.expanded = true;
+  newParent.collapsibleState = TreeItemCollapsibleState.Expanded;
 
   // This will be the only note in the parent, so don't need to order it.
   await note.moveTo(newParent);
