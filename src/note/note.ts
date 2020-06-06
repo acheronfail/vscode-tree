@@ -21,13 +21,17 @@ interface NoteConstructorOptions {
 }
 
 export class Note extends TreeItem {
-  private static dirName(name: string) {
+  public static dirName(name: string) {
     if (!validFilename(name)) {
       // TODO: show error to user?
       throw new Error(`The name "${name}" is not a valid note name!`);
     }
 
     return `${name}.md.d`;
+  }
+
+  public static filePathToDirPath(filePath: string) {
+    return `${filePath}.d`;
   }
 
   // NOTE: convention is that:

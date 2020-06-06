@@ -1,5 +1,5 @@
 import { Note } from '../note/note';
-import vscode, { ExtensionContext } from 'vscode';
+import vscode, { ExtensionContext, Command } from 'vscode';
 import * as constants from '../types';
 import { getActiveNote } from '../extension/workspace-state';
 import { newNote } from './new-note';
@@ -77,9 +77,9 @@ export async function moveNote(note: Note, options: MoveOptions) {
   vscode.commands.executeCommand(constants.COMMAND_TREEVIEW_REFRESH);
 }
 
-export const moveHandler = (context: ExtensionContext, moveOptions: MoveOptions) => async (note?: Note) => {
+export const moveHandler = (context: constants.CommandContext, moveOptions: MoveOptions) => async (note?: Note) => {
   if (!note) {
-    note = getActiveNote(context);
+    note = await getActiveNote(context);
   }
 
   await moveNote(note, moveOptions);

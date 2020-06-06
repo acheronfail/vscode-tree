@@ -15,28 +15,29 @@ export async function activate(context: vscode.ExtensionContext) {
   const noteProvider = await NoteProvider.create(context);
   vscode.window.registerTreeDataProvider(constants.TREEVIEW_ID, noteProvider);
 
+  const ctx: constants.CommandContext = { context, rootNote: noteProvider.rootNote };
+
   // Register commands.
   context.subscriptions.push(
     vscode.commands.registerCommand(constants.COMMAND_TREEVIEW_REFRESH, () => noteProvider.refresh()),
 
-    vscode.commands.registerCommand(constants.COMMAND_OPEN_NOTE, openNoteHandler(context)),
-    vscode.commands.registerCommand(constants.COMMAND_NEW_CHILD_NOTE, newChildNoteHandler(context)),
-    vscode.commands.registerCommand(constants.COMMAND_NEW_SIBLING_NOTE, newSiblingNoteHandler(context)),
-    vscode.commands.registerCommand(constants.COMMAND_DELETE_NOTE, deleteNoteHandler(context)),
+    vscode.commands.registerCommand(constants.COMMAND_OPEN_NOTE, openNoteHandler(ctx)),
+    vscode.commands.registerCommand(constants.COMMAND_NEW_CHILD_NOTE, newChildNoteHandler(ctx)),
+    vscode.commands.registerCommand(constants.COMMAND_NEW_SIBLING_NOTE, newSiblingNoteHandler(ctx)),
+    vscode.commands.registerCommand(constants.COMMAND_DELETE_NOTE, deleteNoteHandler(ctx)),
 
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_UP, moveHandler(context, { delta: -1 })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_DOWN, moveHandler(context, { delta: 1 })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_TOP_PARENT, moveHandler(context, { position: 'top' })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_BOTTOM_PARENT, moveHandler(context, { position: 'bottom' })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_OUT, moveHandler(context, { position: 'out' })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_IN, moveHandler(context, { position: 'in' })),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_UP, moveHandler(ctx, { delta: -1 })),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_DOWN, moveHandler(ctx, { delta: 1 })),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_TOP_PARENT, moveHandler(ctx, { position: 'top' })),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_BOTTOM_PARENT, moveHandler(ctx, { position: 'bottom' })),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_OUT, moveHandler(ctx, { position: 'out' })),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_IN, moveHandler(ctx, { position: 'in' })),
 
     // TODO: rename note
-    // TODO: delete note
   );
 
   // Ensure `activeNote` stays updated.
-  const changeActiveTextEditorHandler = updateActiveNoteHandler(context, noteProvider.rootNote);
+  const changeActiveTextEditorHandler = updateActiveNoteHandler(ctx);
   vscode.window.onDidChangeActiveTextEditor(changeActiveTextEditorHandler);
   changeActiveTextEditorHandler(vscode.window.activeTextEditor);
 }

@@ -6,9 +6,9 @@ import vscode from 'vscode';
 function newNotePrompt(type: NewNoteType, note: Note) {
   switch (type) {
     case NewNoteType.Child:
-      return `New Child (of ${note.name}) Title:`;
+      return ` Title for new Child of "${note.name}":`;
     case NewNoteType.Sibling:
-      return `New Sibling (of ${note.name}) Title:`;
+      return ` Title for new Sibling of "${note.name}":`;
   }
 }
 

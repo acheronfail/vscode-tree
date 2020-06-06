@@ -1,7 +1,7 @@
 import vscode, { ExtensionContext } from 'vscode';
 import { Note } from '../note/note';
 import { getActiveNote } from '../extension/workspace-state';
-import { COMMAND_TREEVIEW_REFRESH } from '../types';
+import { COMMAND_TREEVIEW_REFRESH, CommandContext } from '../types';
 
 export const openNote = async (note: Note) => {
   await note.edit();
@@ -18,9 +18,9 @@ export const openNote = async (note: Note) => {
   }, 1000);
 };
 
-export const openNoteHandler = (context: ExtensionContext) => async (note?: Note) => {
+export const openNoteHandler = (context: CommandContext) => async (note?: Note) => {
   if (!note) {
-    note = getActiveNote(context);
+    note = await getActiveNote(context);
   }
 
   openNote(note);

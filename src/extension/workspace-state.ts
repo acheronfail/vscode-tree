@@ -1,41 +1,53 @@
 import { ExtensionContext, TextEditor } from 'vscode';
 import { Note } from '../note/note';
-import { WorkspaceStateKey, COMMAND_TREEVIEW_REFRESH } from '../types';
+import { WorkspaceStateKey, COMMAND_TREEVIEW_REFRESH, CommandContext } from '../types';
 import vscode from 'vscode';
 
-export function getActiveNote(context: ExtensionContext) {
-  const note = context.workspaceState.get<Note>(WorkspaceStateKey.ActiveNoteFilePath);
+async function findNote(rootNote: Note, targetDirPath: string) {
+  let note: Note | undefined = rootNote;
+  while (note) {
+    const children: Note[] = await note.childrenAsNotes();
+    note = children.find((n: Note): boolean => targetDirPath.startsWith(n.dirPath) || targetDirPath === n.dirPath);
+    if (note?.dirPath === targetDirPath) {
+      return note;
+    }
+  }
+}
+
+export async function getActiveNote({ context, rootNote }: CommandContext) {
+  const filePath = context.workspaceState.get<string>(WorkspaceStateKey.ActiveNoteFilePath);
+  if (!filePath) {
+    throw new Error('No note is active!');
+  }
+
+  const note = await findNote(rootNote, Note.filePathToDirPath(filePath));
   if (!note) {
-    // TODO: show error to user?
     throw new Error('Failed to find active note!');
   }
 
   return note;
 }
 
-export const updateActiveNoteHandler = (context: ExtensionContext, rootNote: Note) => async (editor?: TextEditor) => {
+export const updateActiveNoteHandler = ({ context, rootNote }: CommandContext) => async (editor?: TextEditor) => {
+  const update = async (p?: string) => {
+    context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, p);
+    await vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+  };
+
   const fsPath = editor?.document.uri.fsPath;
   if (!fsPath) {
-    return context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, undefined);
+    return await update(undefined);
   }
 
   // Is the file within the root note directory?
   if (!fsPath.startsWith(rootNote.dirPath)) {
-    return context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, undefined);
+    return await update(undefined);
   }
 
-  // Quick tree search to find active note.
-  let note: Note | undefined = rootNote;
-  while (note) {
-    const children: Note[] = await note.childrenAsNotes();
-    note = children.find((n: Note): boolean => fsPath.startsWith(n.dirPath) || fsPath === n.filePath);
-    if (note?.filePath === fsPath) {
-      context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, note.filePath);
-      // FIXME: fire this even when clearing the state
-      vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
-      return;
-    }
+  const note = await findNote(rootNote, Note.filePathToDirPath(fsPath));
+  if (note) {
+    return await update(note.filePath);
   }
 
-  return context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, undefined);
+  return await update(undefined);
 };
