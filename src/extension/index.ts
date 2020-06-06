@@ -13,9 +13,15 @@ import { moveHandler } from '../commands/move-note';
 export async function activate(context: vscode.ExtensionContext) {
   // Register side bar data provider.
   const noteProvider = await NoteProvider.create(context);
-  vscode.window.registerTreeDataProvider(constants.TREEVIEW_ID, noteProvider);
+  const noteTreeView = vscode.window.createTreeView(constants.TREEVIEW_ID, {
+    treeDataProvider: noteProvider,
+  });
 
-  const ctx: constants.CommandContext = { context, rootNote: noteProvider.rootNote };
+  const ctx: constants.CommandContext = {
+    context,
+    rootNote: noteProvider.rootNote,
+    noteTreeView,
+  };
 
   // Register commands.
   context.subscriptions.push(

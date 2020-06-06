@@ -7,5 +7,5 @@ export const openNoteHandler = (context: CommandContext) => async (note?: Note) 
     note = await getActiveNote(context);
   }
 
-  await note.edit();
+  await note.edit(context);
 };

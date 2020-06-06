@@ -3,7 +3,7 @@ import path from 'path';
 import fs, { pathExists } from 'fs-extra';
 import { Config } from './config';
 import validFilename from 'valid-filename';
-import { NewNoteType, WorkspaceStateKey, ICONS, COMMAND_TREEVIEW_REFRESH } from '../types';
+import { NewNoteType, WorkspaceStateKey, ICONS, COMMAND_TREEVIEW_REFRESH, CommandContext } from '../types';
 
 export interface NoteCreateOptions {
   dirPath: string;
@@ -175,15 +175,18 @@ export class Note extends TreeItem {
     return this.filePath;
   }
 
-  async edit() {
+  async edit(context: CommandContext) {
     // Create note file if it doesn't exist.
     await fs.ensureFile(this.filePath);
 
     const filePathUri = Uri.parse(this.filePath);
     await vscode.window.showTextDocument(filePathUri);
 
-    this.collapsibleState = TreeItemCollapsibleState.Expanded;
-    vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+    await context.noteTreeView.reveal(this, {
+      expand: true,
+      focus: false,
+      select: true,
+    });
   }
 
   async childrenAsNotes(): Promise<Note[]> {

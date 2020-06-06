@@ -1,12 +1,12 @@
 import { Note } from '../note/note';
-import vscode, { ExtensionContext, Command, TreeItemCollapsibleState } from 'vscode';
+import vscode from 'vscode';
 import * as constants from '../types';
 import { getActiveNote } from '../extension/workspace-state';
 import { newNote } from './new-note';
 
 export type MoveOptions = { delta: number } | { position: 'top' | 'bottom' | 'in' | 'out' };
 
-async function moveOut(note: Note, parentNote: Note) {
+async function moveOut(context: constants.CommandContext, note: Note, parentNote: Note) {
   const grandParentNote = parentNote.parent;
   if (!grandParentNote) {
     // Nothing to do, already at outermost layer.
@@ -17,21 +17,19 @@ async function moveOut(note: Note, parentNote: Note) {
   await note.moveTo(grandParentNote, { before: parentNote });
 }
 
-async function moveIn(note: Note) {
+async function moveIn(context: constants.CommandContext, note: Note) {
   // Create a new child of the parent note.
-  const newParent = await newNote(constants.NewNoteType.Sibling, note, false);
+  const newParent = await newNote(context, constants.NewNoteType.Sibling, note, false);
   if (!newParent) {
     // No new note was created.
     return;
   }
 
-  newParent.collapsibleState = TreeItemCollapsibleState.Expanded;
-
   // This will be the only note in the parent, so don't need to order it.
   await note.moveTo(newParent);
 }
 
-export async function moveNote(note: Note, options: MoveOptions) {
+async function moveNote(context: constants.CommandContext, note: Note, options: MoveOptions) {
   // The only note without a parent is the root note and that note should not be able to be moved.
   const parentNote = note.parent;
   if (!parentNote) {
@@ -55,9 +53,9 @@ export async function moveNote(note: Note, options: MoveOptions) {
         target = parentNote.children.length - 1;
         break;
       case 'in':
-        return await moveIn(note);
+        return await moveIn(context, note);
       case 'out':
-        return await moveOut(note, parentNote);
+        return await moveOut(context, note, parentNote);
     }
   }
 
@@ -82,5 +80,5 @@ export const moveHandler = (context: constants.CommandContext, moveOptions: Move
     note = await getActiveNote(context);
   }
 
-  await moveNote(note, moveOptions);
+  await moveNote(context, note, moveOptions);
 };

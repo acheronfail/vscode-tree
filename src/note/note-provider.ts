@@ -30,6 +30,10 @@ export class NoteProvider implements TreeDataProvider<Note> {
     this._onDidChangeTreeData.fire(undefined);
   }
 
+  getParent(note: Note) {
+    return note.parent;
+  }
+
   getTreeItem(note: Note): TreeItem {
     return note;
   }

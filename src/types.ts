@@ -1,10 +1,11 @@
 import path from 'path';
-import { ThemeIcon, ExtensionContext } from 'vscode';
+import { ThemeIcon, ExtensionContext, TreeView } from 'vscode';
 import { Note } from './note/note';
 
 export interface CommandContext {
   context: ExtensionContext;
   rootNote: Note;
+  noteTreeView: TreeView<Note>;
 }
 
 export enum NewNoteType {
