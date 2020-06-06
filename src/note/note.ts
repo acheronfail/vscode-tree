@@ -30,8 +30,8 @@ export class Note extends TreeItem {
     return `${name}.md.d`;
   }
 
-  public static nameFromDirPath(filePath: string) {
-    return path.basename(filePath, '.md');
+  public static nameFromDirPath(dirPath: string) {
+    return path.basename(dirPath, '.md.d');
   }
 
   public static filePathToDirPath(filePath: string) {
