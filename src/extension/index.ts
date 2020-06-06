@@ -1,9 +1,10 @@
 import vscode, { commands } from 'vscode';
 import { NoteProvider } from '../note/note-provider';
 import { updateActiveNoteHandler } from './workspace-state';
-import * as C from '../types';
+import * as C from '../constants';
 import { createHandler } from '../util';
 import { newNote, renameNote, moveNote } from '../commands';
+import { CommandContext, NewNoteType } from '../types';
 
 // TODO: https://github.com/mushanshitiancai/vscode-paste-image
 
@@ -14,7 +15,7 @@ export async function activate(context: vscode.ExtensionContext) {
     treeDataProvider: noteProvider,
   });
 
-  const ctx: C.CommandContext = {
+  const ctx: CommandContext = {
     context,
     rootNote: noteProvider.rootNote,
     noteTreeView,
@@ -30,11 +31,11 @@ export async function activate(context: vscode.ExtensionContext) {
     ),
     commands.registerCommand(
       C.CMD_NEW_CHILD_NOTE,
-      createHandler(ctx, (c, n) => newNote(c, C.NewNoteType.Child, n)),
+      createHandler(ctx, (c, n) => newNote(c, NewNoteType.Child, n)),
     ),
     commands.registerCommand(
       C.CMD_NEW_SIBLING_NOTE,
-      createHandler(ctx, (c, n) => newNote(c, C.NewNoteType.Sibling, n)),
+      createHandler(ctx, (c, n) => newNote(c, NewNoteType.Sibling, n)),
     ),
     commands.registerCommand(
       C.CMD_DELETE_NOTE,

@@ -3,7 +3,8 @@ import path from 'path';
 import fs, { pathExists } from 'fs-extra';
 import { Config } from './config';
 import validFilename from 'valid-filename';
-import { NewNoteType, WorkspaceStateKey, ICONS, CMD_TREEVIEW_REFRESH, CommandContext, CMD_OPEN_NOTE } from '../types';
+import { NewNoteType, WorkspaceStateKey, CommandContext } from '../types';
+import { CMD_OPEN_NOTE, ICONS, CMD_TREEVIEW_REFRESH } from '../constants';
 
 export interface NoteCreateOptions {
   dirPath: string;

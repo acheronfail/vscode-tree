@@ -1,7 +1,8 @@
-import { ExtensionContext, TextEditor } from 'vscode';
+import { TextEditor } from 'vscode';
 import { Note } from '../note/note';
-import { WorkspaceStateKey, CMD_TREEVIEW_REFRESH, CommandContext } from '../types';
+import { WorkspaceStateKey, CommandContext } from '../types';
 import vscode from 'vscode';
+import { CMD_TREEVIEW_REFRESH } from '../constants';
 
 async function findNote(rootNote: Note, targetDirPath: string) {
   let note: Note | undefined = rootNote;

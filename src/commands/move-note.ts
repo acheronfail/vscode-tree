@@ -1,11 +1,12 @@
 import { Note } from '../note/note';
 import vscode from 'vscode';
-import * as constants from '../types';
+import * as constants from '../constants';
 import { newNote } from './new-note';
+import { CommandContext, NewNoteType } from '../types';
 
 export type MoveOptions = { delta: number } | { position: 'top' | 'bottom' | 'in' | 'out' };
 
-async function moveOut(context: constants.CommandContext, note: Note, parentNote: Note) {
+async function moveOut(context: CommandContext, note: Note, parentNote: Note) {
   const grandParentNote = parentNote.parent;
   if (!grandParentNote) {
     // Nothing to do, already at outermost layer.
@@ -16,9 +17,9 @@ async function moveOut(context: constants.CommandContext, note: Note, parentNote
   await note.moveTo(grandParentNote, { before: parentNote });
 }
 
-async function moveIn(context: constants.CommandContext, note: Note) {
+async function moveIn(context: CommandContext, note: Note) {
   // Create a new child of the parent note.
-  const newParent = await newNote(context, constants.NewNoteType.Sibling, note, false);
+  const newParent = await newNote(context, NewNoteType.Sibling, note, false);
   if (!newParent) {
     // No new note was created.
     return;
@@ -28,7 +29,7 @@ async function moveIn(context: constants.CommandContext, note: Note) {
   await note.moveTo(newParent);
 }
 
-export async function moveNote(context: constants.CommandContext, note: Note, options: MoveOptions) {
+export async function moveNote(context: CommandContext, note: Note, options: MoveOptions) {
   // The only note without a parent is the root note and that note should not be able to be moved.
   const parentNote = note.parent;
   if (!parentNote) {

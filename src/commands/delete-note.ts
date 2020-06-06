@@ -1,6 +1,6 @@
 import { Note } from '../note/note';
 import vscode from 'vscode';
-import { CMD_TREEVIEW_REFRESH } from '../types';
+import { CMD_TREEVIEW_REFRESH } from '../constants';
 
 export async function deleteNote(note: Note) {
   const message = `Are you sure you want to delete '${note.name}'? This will also delete all of its children!`;
