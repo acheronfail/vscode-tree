@@ -23,7 +23,6 @@ interface NoteConstructorOptions {
 export class Note extends TreeItem {
   public static dirName(name: string) {
     if (!validFilename(name)) {
-      // TODO: show error to user?
       throw new Error(`The name "${name}" is not a valid note name!`);
     }
 
@@ -32,6 +31,11 @@ export class Note extends TreeItem {
 
   public static filePathToDirPath(filePath: string) {
     return `${filePath}.d`;
+  }
+
+  public static dirPathToFilePath(dirPath: string) {
+    // Trim off the `.d`.
+    return dirPath.slice(0, -2);
   }
 
   // NOTE: convention is that:
@@ -202,6 +206,40 @@ export class Note extends TreeItem {
     );
   }
 
+  async rename(name: string) {
+    if (!this.parent) {
+      throw new Error('Failed to find note parent!');
+    }
+
+    const newDirName = Note.dirName(name);
+    const newDirPath = path.join(this.parent.dirPath, newDirName);
+    const newFilePath = Note.dirPathToFilePath(newDirPath);
+
+    const checks = await Promise.all([pathExists(newDirPath), pathExists(newFilePath)]);
+    if (checks.some(Boolean)) {
+      throw new Error(`A note with the name "${name}" already exists under "${this.parent.name}"!`);
+    }
+
+    await this._rename(newDirPath, newFilePath);
+
+    // Make sure renamed entry is in the same spot in the parent.
+    this.parent.children = this.parent.children.map(dirPath => {
+      if (dirPath === this.dirPath) {
+        return newDirPath;
+      }
+
+      return dirPath;
+    });
+
+    await vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+  }
+
+  private async _rename(newDirPath: string, newFilePath: string) {
+    // FIXME: when moving in this seems to copy rather than rename?
+    await vscode.workspace.fs.rename(Uri.parse(this.dirPath), Uri.parse(newDirPath));
+    await vscode.workspace.fs.rename(Uri.parse(this.filePath), Uri.parse(newFilePath));
+  }
+
   async moveTo(newParent: Note, moveOptions?: { before: Note }) {
     const name = this.name;
 
@@ -214,9 +252,9 @@ export class Note extends TreeItem {
       let n = 0;
       do {
         newName = `${name}${n ? `-${n}` : ''}`;
-        newDirPath = path.join(newParent.dirPath, `${newName}.md.d`);
-        newFilePath = path.join(newParent.dirPath, `${newName}.md`);
-        checks = await Promise.all([await pathExists(newDirPath), await pathExists(newFilePath)]);
+        newDirPath = path.join(newParent.dirPath, Note.dirName(newName));
+        newFilePath = Note.dirPathToFilePath(newDirPath);
+        checks = await Promise.all([pathExists(newDirPath), pathExists(newFilePath)]);
         n++;
       } while (checks.some(Boolean));
 
@@ -230,13 +268,11 @@ export class Note extends TreeItem {
       );
     }
 
-    // FIXME: when moving in this seems to cop rather than rename?
-    await vscode.workspace.fs.rename(Uri.parse(this.dirPath), Uri.parse(newDirPath));
-    await vscode.workspace.fs.rename(Uri.parse(this.filePath), Uri.parse(newFilePath));
+    await this._rename(newDirPath, newFilePath);
 
-    // Place in the correct spot.
+    // Sort in the correct spot in the parent.
     if (moveOptions) {
-      const index = newParent.children.findIndex(p => p === moveOptions.before.dirPath);
+      const index = newParent.children.findIndex(dirPath => dirPath === moveOptions.before.dirPath);
       if (index === -1) {
         throw new Error('Failed to find before note in newParent!');
       }

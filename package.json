@@ -32,6 +32,10 @@
         "title": "New Sibling Note"
       },
       {
+        "command": "vscode-tree.renameNote",
+        "title": "Rename Note"
+      },
+      {
         "command": "vscode-tree.deleteNote",
         "title": "Delete Note"
       },
@@ -84,8 +88,12 @@
           "group": "1_vscode-tree@2"
         },
         {
-          "command": "vscode-tree.deleteNote",
+          "command": "vscode-tree.renameNote",
           "group": "2_vscode-tree@1"
+        },
+        {
+          "command": "vscode-tree.deleteNote",
+          "group": "2_vscode-tree@2"
         },
         {
           "command": "vscode-tree.moveOut",
