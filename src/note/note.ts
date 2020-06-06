@@ -3,7 +3,7 @@ import path from 'path';
 import fs, { pathExists } from 'fs-extra';
 import { Config } from './config';
 import validFilename from 'valid-filename';
-import { NewNoteType, WorkspaceStateKey, ICONS, COMMAND_TREEVIEW_REFRESH, CommandContext } from '../types';
+import { NewNoteType, WorkspaceStateKey, ICONS, CMD_TREEVIEW_REFRESH, CommandContext, CMD_OPEN_NOTE } from '../types';
 
 export interface NoteCreateOptions {
   dirPath: string;
@@ -157,7 +157,7 @@ export class Note extends TreeItem {
 
   get command(): Command {
     return {
-      command: 'vscode-tree.openNote',
+      command: CMD_OPEN_NOTE,
       title: 'Open Note',
       arguments: [this],
     };
@@ -231,7 +231,7 @@ export class Note extends TreeItem {
       return dirPath;
     });
 
-    await vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+    await vscode.commands.executeCommand(CMD_TREEVIEW_REFRESH);
   }
 
   private async _rename(newDirPath: string, newFilePath: string) {
@@ -326,7 +326,7 @@ export class Note extends TreeItem {
     }
     newParent.updateConfigEntry();
 
-    await vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+    await vscode.commands.executeCommand(CMD_TREEVIEW_REFRESH);
   }
 
   // TODO: advanced delete behaviour?

@@ -19,24 +19,24 @@ export enum WorkspaceStateKey {
 
 // NOTE: these values need to match up with those in package.json.
 
-export const EXTENSION_ID = 'vscode-tree';
+export const ID_EXTENSION = 'vscode-tree';
+export const ID_TREEVIEW = 'treeView';
 
-export const COMMAND_OPEN_NOTE = `${EXTENSION_ID}.openNote`;
-export const COMMAND_NEW_CHILD_NOTE = `${EXTENSION_ID}.newChildNote`;
-export const COMMAND_NEW_SIBLING_NOTE = `${EXTENSION_ID}.newSiblingNote`;
-export const COMMAND_DELETE_NOTE = `${EXTENSION_ID}.deleteNote`;
-export const COMMAND_RENAME_NOTE = `${EXTENSION_ID}.renameNote`;
-export const COMMAND_DUPLICATE_NOTE = `${EXTENSION_ID}.duplicateNote`;
+export const CMD_OPEN_NOTE = `${ID_EXTENSION}.openNote`;
+export const CMD_NEW_CHILD_NOTE = `${ID_EXTENSION}.newChildNote`;
+export const CMD_NEW_SIBLING_NOTE = `${ID_EXTENSION}.newSiblingNote`;
+export const CMD_DELETE_NOTE = `${ID_EXTENSION}.deleteNote`;
+export const CMD_RENAME_NOTE = `${ID_EXTENSION}.renameNote`;
+export const CMD_DUPLICATE_NOTE = `${ID_EXTENSION}.duplicateNote`;
 
-export const COMMAND_MOVE_TOP_PARENT = `${EXTENSION_ID}.moveTopParent`;
-export const COMMAND_MOVE_BOTTOM_PARENT = `${EXTENSION_ID}.moveBottomParent`;
-export const COMMAND_MOVE_OUT = `${EXTENSION_ID}.moveOut`;
-export const COMMAND_MOVE_IN = `${EXTENSION_ID}.moveIn`;
-export const COMMAND_MOVE_UP = `${EXTENSION_ID}.moveUp`;
-export const COMMAND_MOVE_DOWN = `${EXTENSION_ID}.moveDown`;
+export const CMD_MOVE_TOP_PARENT = `${ID_EXTENSION}.moveTopParent`;
+export const CMD_MOVE_BOTTOM_PARENT = `${ID_EXTENSION}.moveBottomParent`;
+export const CMD_MOVE_OUT = `${ID_EXTENSION}.moveOut`;
+export const CMD_MOVE_IN = `${ID_EXTENSION}.moveIn`;
+export const CMD_MOVE_UP = `${ID_EXTENSION}.moveUp`;
+export const CMD_MOVE_DOWN = `${ID_EXTENSION}.moveDown`;
 
-export const TREEVIEW_ID = 'treeView';
-export const COMMAND_TREEVIEW_REFRESH = `${TREEVIEW_ID}.refresh`;
+export const CMD_TREEVIEW_REFRESH = `${ID_TREEVIEW}.refresh`;
 
 export const RESOURCES_PATH = path.resolve(__dirname, '..', 'resources');
 export const ICONS = {

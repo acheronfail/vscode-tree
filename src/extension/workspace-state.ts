@@ -1,6 +1,6 @@
 import { ExtensionContext, TextEditor } from 'vscode';
 import { Note } from '../note/note';
-import { WorkspaceStateKey, COMMAND_TREEVIEW_REFRESH, CommandContext } from '../types';
+import { WorkspaceStateKey, CMD_TREEVIEW_REFRESH, CommandContext } from '../types';
 import vscode from 'vscode';
 
 async function findNote(rootNote: Note, targetDirPath: string) {
@@ -31,7 +31,7 @@ export async function getActiveNote({ context, rootNote }: CommandContext) {
 export const updateActiveNoteHandler = ({ context, rootNote }: CommandContext) => async (editor?: TextEditor) => {
   const update = async (p?: string) => {
     context.workspaceState.update(WorkspaceStateKey.ActiveNoteFilePath, p);
-    await vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+    await vscode.commands.executeCommand(CMD_TREEVIEW_REFRESH);
   };
 
   const fsPath = editor?.document.uri.fsPath;

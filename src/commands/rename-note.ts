@@ -1,6 +1,4 @@
-import { CommandContext } from '../types';
 import { Note } from '../note/note';
-import { getActiveNote } from '../extension/workspace-state';
 import vscode from 'vscode';
 
 export const renameNote = async (note: Note) => {
@@ -12,12 +10,4 @@ export const renameNote = async (note: Note) => {
   }
 
   note.rename(newName);
-};
-
-export const renameNoteHandler = (context: CommandContext) => async (note?: Note) => {
-  if (!note) {
-    note = await getActiveNote(context);
-  }
-
-  await renameNote(note);
 };

@@ -1,7 +1,6 @@
 import { Note } from '../note/note';
-import vscode, { ExtensionContext } from 'vscode';
-import { getActiveNote } from '../extension/workspace-state';
-import { COMMAND_TREEVIEW_REFRESH, CommandContext } from '../types';
+import vscode from 'vscode';
+import { CMD_TREEVIEW_REFRESH } from '../types';
 
 export async function deleteNote(note: Note) {
   const message = `Are you sure you want to delete '${note.name}'? This will also delete all of its children!`;
@@ -12,14 +11,6 @@ export async function deleteNote(note: Note) {
       note.parent.children = note.parent.children.filter(p => p !== note.dirPath);
     }
 
-    await vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+    await vscode.commands.executeCommand(CMD_TREEVIEW_REFRESH);
   }
 }
-
-export const deleteNoteHandler = (context: CommandContext) => async (note?: Note) => {
-  if (!note) {
-    note = await getActiveNote(context);
-  }
-
-  return await deleteNote(note);
-};

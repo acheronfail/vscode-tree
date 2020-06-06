@@ -1,25 +1,20 @@
-import vscode from 'vscode';
-import { openNoteHandler } from '../commands/open-note';
+import vscode, { commands } from 'vscode';
 import { NoteProvider } from '../note/note-provider';
-import { deleteNoteHandler } from '../commands/delete-note';
 import { updateActiveNoteHandler } from './workspace-state';
-import { newChildNoteHandler } from '../commands/new-child-note';
-import { newSiblingNoteHandler } from '../commands/new-sibling-note';
-import * as constants from '../types';
-import { moveHandler } from '../commands/move-note';
-import { renameNoteHandler } from '../commands/rename-note';
-import { duplicateNoteHandler } from '../commands/duplicate-note';
+import * as C from '../types';
+import { createHandler } from '../util';
+import { newNote, renameNote, moveNote } from '../commands';
 
 // TODO: https://github.com/mushanshitiancai/vscode-paste-image
 
 export async function activate(context: vscode.ExtensionContext) {
   // Register side bar data provider.
   const noteProvider = await NoteProvider.create(context);
-  const noteTreeView = vscode.window.createTreeView(constants.TREEVIEW_ID, {
+  const noteTreeView = vscode.window.createTreeView(C.ID_TREEVIEW, {
     treeDataProvider: noteProvider,
   });
 
-  const ctx: constants.CommandContext = {
+  const ctx: C.CommandContext = {
     context,
     rootNote: noteProvider.rootNote,
     noteTreeView,
@@ -27,23 +22,57 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register commands.
   context.subscriptions.push(
-    vscode.commands.registerCommand(constants.COMMAND_TREEVIEW_REFRESH, () => noteProvider.refresh()),
+    commands.registerCommand(C.CMD_TREEVIEW_REFRESH, () => noteProvider.refresh()),
 
-    vscode.commands.registerCommand(constants.COMMAND_OPEN_NOTE, openNoteHandler(ctx)),
-    vscode.commands.registerCommand(constants.COMMAND_NEW_CHILD_NOTE, newChildNoteHandler(ctx)),
-    vscode.commands.registerCommand(constants.COMMAND_NEW_SIBLING_NOTE, newSiblingNoteHandler(ctx)),
-    vscode.commands.registerCommand(constants.COMMAND_DELETE_NOTE, deleteNoteHandler(ctx)),
-    vscode.commands.registerCommand(constants.COMMAND_RENAME_NOTE, renameNoteHandler(ctx)),
-    vscode.commands.registerCommand(constants.COMMAND_DUPLICATE_NOTE, duplicateNoteHandler(ctx)),
+    commands.registerCommand(
+      C.CMD_OPEN_NOTE,
+      createHandler(ctx, (c, n) => n.edit(c)),
+    ),
+    commands.registerCommand(
+      C.CMD_NEW_CHILD_NOTE,
+      createHandler(ctx, (c, n) => newNote(c, C.NewNoteType.Child, n)),
+    ),
+    commands.registerCommand(
+      C.CMD_NEW_SIBLING_NOTE,
+      createHandler(ctx, (c, n) => newNote(c, C.NewNoteType.Sibling, n)),
+    ),
+    commands.registerCommand(
+      C.CMD_DELETE_NOTE,
+      createHandler(ctx, (_, n) => n.delete()),
+    ),
+    commands.registerCommand(
+      C.CMD_RENAME_NOTE,
+      createHandler(ctx, (_, n) => renameNote(n)),
+    ),
+    commands.registerCommand(
+      C.CMD_DUPLICATE_NOTE,
+      createHandler(ctx, (c, n) => n.duplicate(c)),
+    ),
 
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_UP, moveHandler(ctx, { delta: -1 })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_DOWN, moveHandler(ctx, { delta: 1 })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_TOP_PARENT, moveHandler(ctx, { position: 'top' })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_BOTTOM_PARENT, moveHandler(ctx, { position: 'bottom' })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_OUT, moveHandler(ctx, { position: 'out' })),
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_IN, moveHandler(ctx, { position: 'in' })),
-
-    // TODO: show errors to user (wrap handlers? also de-dupe getActiveNote calls)
+    commands.registerCommand(
+      C.CMD_MOVE_UP,
+      createHandler(ctx, (c, n) => moveNote(c, n, { delta: -1 })),
+    ),
+    commands.registerCommand(
+      C.CMD_MOVE_DOWN,
+      createHandler(ctx, (c, n) => moveNote(c, n, { delta: 1 })),
+    ),
+    commands.registerCommand(
+      C.CMD_MOVE_TOP_PARENT,
+      createHandler(ctx, (c, n) => moveNote(c, n, { position: 'top' })),
+    ),
+    commands.registerCommand(
+      C.CMD_MOVE_BOTTOM_PARENT,
+      createHandler(ctx, (c, n) => moveNote(c, n, { position: 'bottom' })),
+    ),
+    commands.registerCommand(
+      C.CMD_MOVE_OUT,
+      createHandler(ctx, (c, n) => moveNote(c, n, { position: 'out' })),
+    ),
+    commands.registerCommand(
+      C.CMD_MOVE_IN,
+      createHandler(ctx, (c, n) => moveNote(c, n, { position: 'in' })),
+    ),
   );
 
   // Ensure `activeNote` stays updated.
