@@ -236,39 +236,82 @@ export class Note extends TreeItem {
 
   private async _rename(newDirPath: string, newFilePath: string) {
     // FIXME: when moving in this seems to copy rather than rename?
-    await vscode.workspace.fs.rename(Uri.parse(this.dirPath), Uri.parse(newDirPath));
-    await vscode.workspace.fs.rename(Uri.parse(this.filePath), Uri.parse(newFilePath));
+    await Promise.all([
+      vscode.workspace.fs.rename(Uri.parse(this.dirPath), Uri.parse(newDirPath)),
+      vscode.workspace.fs.rename(Uri.parse(this.filePath), Uri.parse(newFilePath)),
+    ]);
+  }
+
+  private async _copy(newDirPath: string, newFilePath: string) {
+    await Promise.all([
+      vscode.workspace.fs.copy(Uri.parse(this.dirPath), Uri.parse(newDirPath)),
+      vscode.workspace.fs.copy(Uri.parse(this.filePath), Uri.parse(newFilePath)),
+    ]);
+  }
+
+  private async _moveToTrash() {
+    const options = { recursive: true, useTrash: true };
+    await Promise.all([
+      vscode.workspace.fs.delete(Uri.parse(this.filePath), options),
+      vscode.workspace.fs.delete(Uri.parse(this.dirPath), options),
+    ]);
+  }
+
+  async duplicate(context: CommandContext) {
+    if (!this.parent) {
+      throw new Error('Failed to find note parent!');
+    }
+
+    const { newDirPath, newFilePath, newName } = await this._findDestination(this.parent.dirPath);
+    await this._copy(newDirPath, newFilePath);
+
+    vscode.window.showInformationMessage(`Created duplicated note "${newName}"`);
+
+    // Order duplicated note.
+    const thisIndex = this.parent.children.findIndex(dirPath => dirPath === this.dirPath);
+    if (thisIndex === -1) {
+      throw new Error('Failed to find note in parent!');
+    }
+
+    this.parent.children.splice(thisIndex + 1, 0, newDirPath);
+
+    // Open duplicated note.
+    const siblings = await this.parent.childrenAsNotes();
+    const duplicatedNote = siblings.find(n => n.dirPath === newDirPath);
+    if (!duplicatedNote) {
+      throw new Error('Failed to find duplicated note!');
+    }
+
+    await duplicatedNote.edit(context);
+  }
+
+  private async _findDestination(dirPath: string) {
+    let newName;
+    let newDirPath;
+    let newFilePath;
+    let checks;
+    let n = 0;
+    do {
+      newName = `${this.name}${n ? `-${n}` : ''}`;
+      newDirPath = path.join(dirPath, Note.dirName(newName));
+      newFilePath = Note.dirPathToFilePath(newDirPath);
+      checks = await Promise.all([pathExists(newDirPath), pathExists(newFilePath)]);
+      n++;
+    } while (checks.some(Boolean));
+
+    return { newDirPath, newFilePath, newName };
   }
 
   async moveTo(newParent: Note, moveOptions?: { before: Note }) {
-    const name = this.name;
-
     // Simply rename the note if the destination already existed.
-    async function findDestination() {
-      let newName;
-      let newDirPath;
-      let newFilePath;
-      let checks;
-      let n = 0;
-      do {
-        newName = `${name}${n ? `-${n}` : ''}`;
-        newDirPath = path.join(newParent.dirPath, Note.dirName(newName));
-        newFilePath = Note.dirPathToFilePath(newDirPath);
-        checks = await Promise.all([pathExists(newDirPath), pathExists(newFilePath)]);
-        n++;
-      } while (checks.some(Boolean));
-
-      return { newDirPath, newFilePath, newName };
-    }
-
-    const { newDirPath, newFilePath, newName } = await findDestination();
-    if (newName !== name) {
-      vscode.window.showInformationMessage(
-        `The note was renamed to "${newName}" because "${name}" already existed in the parent`,
-      );
-    }
+    const { newDirPath, newFilePath, newName } = await this._findDestination(newParent.dirPath);
 
     await this._rename(newDirPath, newFilePath);
+    if (newName !== this.name) {
+      vscode.window.showInformationMessage(
+        `The note was renamed to "${newName}" because "${this.name}" already existed in the parent`,
+      );
+    }
 
     // Sort in the correct spot in the parent.
     if (moveOptions) {
@@ -289,20 +332,21 @@ export class Note extends TreeItem {
   // TODO: advanced delete behaviour?
   //  move children into parent, etc
   async delete() {
-    const fileUri = Uri.parse(this.filePath);
-    const dirUri = Uri.parse(this.dirPath);
-
     // Move the note and its folder to the trash.
-    const options = { recursive: true, useTrash: true };
-    await vscode.workspace.fs.delete(fileUri, options);
-    await vscode.workspace.fs.delete(dirUri, options);
+    await this._moveToTrash();
 
+    // Close the editor.
+    const fileUri = Uri.parse(this.filePath);
     for (const editor of vscode.window.visibleTextEditors) {
       if (editor.document.uri.fsPath === fileUri.fsPath) {
         // Annoyingly we can't just close an editor, we must first focus it and then execute a command.
         await vscode.window.showTextDocument(fileUri, { preserveFocus: false, preview: true });
         await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
       }
+    }
+
+    if (this.parent) {
+      this.parent.children = this.parent.children.filter(dirPath => dirPath !== this.dirPath);
     }
   }
 
