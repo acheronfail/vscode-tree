@@ -38,10 +38,19 @@ export const RESOURCES_PATH = path.resolve(__dirname, '..', 'resources');
 export const ICONS = {
   PREVIEW: new ThemeIcon('edit'),
 
+  NOTE_NAME: 'NOTE',
   NOTE_0: path.join(RESOURCES_PATH, 'note.gold.svg'),
   NOTE_1: path.join(RESOURCES_PATH, 'note.green.svg'),
   NOTE_2: path.join(RESOURCES_PATH, 'note.blue.svg'),
   NOTE_3: path.join(RESOURCES_PATH, 'note.purple.svg'),
   NOTE_4: path.join(RESOURCES_PATH, 'note.red.svg'),
-  NOTE_NUMBER: 5,
+
+  EDIT_NAME: 'EDIT',
+  EDIT_0: path.join(RESOURCES_PATH, 'edit.gold.svg'),
+  EDIT_1: path.join(RESOURCES_PATH, 'edit.green.svg'),
+  EDIT_2: path.join(RESOURCES_PATH, 'edit.blue.svg'),
+  EDIT_3: path.join(RESOURCES_PATH, 'edit.purple.svg'),
+  EDIT_4: path.join(RESOURCES_PATH, 'edit.red.svg'),
+
+  COLOR_DEPTH: 5,
 } as const;

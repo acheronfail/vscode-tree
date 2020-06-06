@@ -165,12 +165,9 @@ export class Note extends TreeItem {
 
   get iconPath(): ThemeIcon {
     const activeNoteFilePath = this.context.workspaceState.get<string>(WorkspaceStateKey.ActiveNoteFilePath);
-    if (activeNoteFilePath === this.filePath) {
-      // TODO: color preview icon too
-      return ICONS.PREVIEW;
-    }
-
-    const iconKey = `NOTE_${this.depth % ICONS.NOTE_NUMBER}` as keyof typeof ICONS;
+    const iconName = activeNoteFilePath === this.filePath ? ICONS.EDIT_NAME : ICONS.NOTE_NAME;
+    const colorIndex = this.depth % ICONS.COLOR_DEPTH;
+    const iconKey = `${iconName}_${colorIndex}` as keyof typeof ICONS;
     return ICONS[iconKey];
   }
 
