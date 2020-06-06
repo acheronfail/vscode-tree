@@ -20,57 +20,57 @@
     "commands": [
       {
         "command": "treeView.refresh",
-        "title": "Refresh Notes",
+        "title": "Notes: Refresh Tree View",
         "icon": "$(refresh)"
       },
       {
         "command": "vscode-tree.newChildNote",
-        "title": "New Child Note"
+        "title": "Notes: New Child"
       },
       {
         "command": "vscode-tree.newSiblingNote",
-        "title": "New Sibling Note"
+        "title": "Notes: New Sibling"
       },
       {
         "command": "vscode-tree.duplicateNote",
-        "title": "Duplicate Note"
+        "title": "Notes: Duplicate"
       },
       {
         "command": "vscode-tree.renameNote",
-        "title": "Rename Note"
+        "title": "Notes: Rename"
       },
       {
         "command": "vscode-tree.deleteNote",
-        "title": "Delete Note"
+        "title": "Notes: Delete"
       },
       {
         "command": "vscode-tree.moveOut",
-        "title": "Move Out",
+        "title": "Notes: Move Out",
         "icon": "$(arrow-left)"
       },
       {
         "command": "vscode-tree.moveIn",
-        "title": "Move In",
+        "title": "Notes: Move In",
         "icon": "$(arrow-right)"
       },
       {
         "command": "vscode-tree.moveTopParent",
-        "title": "Move to Top of Parent",
+        "title": "Notes: Move to Top of Parent",
         "icon": "$(arrow-up)"
       },
       {
         "command": "vscode-tree.moveBottomParent",
-        "title": "Move to Bottom of Parent",
+        "title": "Notes: Move to Bottom of Parent",
         "icon": "$(arrow-down)"
       },
       {
         "command": "vscode-tree.moveUp",
-        "title": "Move Up",
+        "title": "Notes: Move Up",
         "icon": "$(chevron-up)"
       },
       {
         "command": "vscode-tree.moveDown",
-        "title": "Move Down",
+        "title": "Notes: Move Down",
         "icon": "$(chevron-down)"
       }
     ],
