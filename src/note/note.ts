@@ -46,6 +46,8 @@ export class Note extends TreeItem {
   // NOTE: convention is that:
   //  - every file has a directory
   //  - the file name is `$NAME.md` and directory is `$NAME.md.d`
+  //
+  // The `create` function assumes the directory already exists on disk.
   public static async create(options: NoteCreateOptions) {
     const { dirPath, config, parent, context } = options;
 
