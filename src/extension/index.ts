@@ -7,6 +7,7 @@ import { newNote, renameNote, moveNote } from '../commands';
 import { CommandContext, NewNoteType } from '../types';
 
 // TODO: https://github.com/mushanshitiancai/vscode-paste-image
+// TODO: https://github.com/microsoft/vscode/issues/32592
 
 export async function activate(context: vscode.ExtensionContext) {
   // Register side bar data provider.
