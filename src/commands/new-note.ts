@@ -12,7 +12,7 @@ function newNotePrompt(type: NewNoteType, note: Note) {
   }
 }
 
-export const newNote = async (type: NewNoteType, note: Note) => {
+export const newNote = async (type: NewNoteType, note: Note, open = true) => {
   const prompt = newNotePrompt(type, note);
   const name = await vscode.window.showInputBox({ prompt });
   if (!name) {
@@ -20,5 +20,9 @@ export const newNote = async (type: NewNoteType, note: Note) => {
   }
 
   const newNote = await note.newNote(type, name);
-  await openNote(newNote);
+  if (open) {
+    await openNote(newNote);
+  }
+
+  return newNote;
 };

@@ -1,9 +1,9 @@
 import vscode, { TreeItem, TreeItemCollapsibleState, Uri, Command, ThemeIcon, ExtensionContext } from 'vscode';
 import path from 'path';
-import fs from 'fs-extra';
+import fs, { pathExists } from 'fs-extra';
 import { Config } from './config';
 import validFilename from 'valid-filename';
-import { NewNoteType, WorkspaceStateKey, ICONS } from '../types';
+import { NewNoteType, WorkspaceStateKey, ICONS, COMMAND_TREEVIEW_REFRESH } from '../types';
 
 export interface NoteCreateOptions {
   dirPath: string;
@@ -117,29 +117,34 @@ export class Note extends TreeItem {
   }
 
   async newNote(type: NewNoteType, name: string) {
+    const makeDirPath = (dir: string) => path.join(dir, Note.dirName(name));
+
+    let dirPath;
     switch (type) {
       case NewNoteType.Child:
-        return this.newChild(name);
+        dirPath = makeDirPath(this.dirPath);
+        // Insert as last child in parent.
+        this.children.push(dirPath);
+        this.updateConfigEntry();
+        break;
       case NewNoteType.Sibling:
-        return this.newSibling(name);
-    }
-  }
+        dirPath = makeDirPath(path.dirname(this.dirPath));
+        // Insert after this note as sibling.
+        if (this.parent) {
+          const thisIndex = this.parent.children.findIndex(p => p === this.dirPath);
+          if (thisIndex === -1) {
+            throw new Error('Failed to find note in parent!');
+          }
 
-  async newChild(name: string) {
-    const dirPath = path.join(this.dirPath, Note.dirName(name));
+          this.parent.children.splice(thisIndex + 1, 0, dirPath);
+          this.parent.updateConfigEntry();
+        }
+        break;
+    }
+
     return await Note.create({
       dirPath,
       parent: this,
-      context: this.context,
-      config: this.config,
-    });
-  }
-
-  async newSibling(name: string) {
-    const dirPath = path.join(path.dirname(this.dirPath), Note.dirName(name));
-    return await Note.create({
-      dirPath,
-      parent: this.parent,
       context: this.context,
       config: this.config,
     });
@@ -160,6 +165,7 @@ export class Note extends TreeItem {
   get iconPath(): ThemeIcon {
     const activeNoteFilePath = this.context.workspaceState.get<string>(WorkspaceStateKey.ActiveNoteFilePath);
     if (activeNoteFilePath === this.filePath) {
+      // TODO: color preview icon too
       return ICONS.PREVIEW;
     }
 
@@ -192,6 +198,53 @@ export class Note extends TreeItem {
     );
   }
 
+  async moveTo(newParent: Note, moveOptions?: { before: Note }) {
+    const name = this.name;
+
+    // Simply rename the note if the destination already existed.
+    async function findDestination() {
+      let newName;
+      let newDirPath;
+      let newFilePath;
+      let checks;
+      let n = 0;
+      do {
+        newName = `${name}${n ? `-${n}` : ''}`;
+        newDirPath = path.join(newParent.dirPath, `${newName}.md.d`);
+        newFilePath = path.join(newParent.dirPath, `${newName}.md`);
+        checks = await Promise.all([await pathExists(newDirPath), await pathExists(newFilePath)]);
+        n++;
+      } while (checks.some(Boolean));
+
+      return { newDirPath, newFilePath, newName };
+    }
+
+    const { newDirPath, newFilePath, newName } = await findDestination();
+    if (newName !== name) {
+      vscode.window.showInformationMessage(
+        `The note was renamed to "${newName}" because "${name}" already existed in the parent`,
+      );
+    }
+
+    await vscode.workspace.fs.rename(Uri.parse(this.dirPath), Uri.parse(newDirPath));
+    await vscode.workspace.fs.rename(Uri.parse(this.filePath), Uri.parse(newFilePath));
+
+    // Place in the correct spot.
+    if (moveOptions) {
+      const index = newParent.children.findIndex(p => p === moveOptions.before.dirPath);
+      if (index === -1) {
+        throw new Error('Failed to find before note in newParent!');
+      }
+
+      newParent.children.splice(index, 0, newDirPath);
+    } else {
+      newParent.children.push(newDirPath);
+    }
+    newParent.updateConfigEntry();
+
+    await vscode.commands.executeCommand(COMMAND_TREEVIEW_REFRESH);
+  }
+
   // TODO: advanced delete behaviour?
   //  move children into parent, etc
   async delete() {
@@ -212,6 +265,7 @@ export class Note extends TreeItem {
     }
   }
 
+  // TODO: when do _save_ config to disk?
   updateConfigEntry() {
     const { config, dirPath, expanded, children } = this;
     if (!config.sort[dirPath]) {

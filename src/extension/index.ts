@@ -28,10 +28,11 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(constants.COMMAND_MOVE_DOWN, moveHandler(context, { delta: 1 })),
     vscode.commands.registerCommand(constants.COMMAND_MOVE_TOP_PARENT, moveHandler(context, { position: 'top' })),
     vscode.commands.registerCommand(constants.COMMAND_MOVE_BOTTOM_PARENT, moveHandler(context, { position: 'bottom' })),
-    // TODO: remove from parent, add as sibling to parent
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_OUT, () => console.log('TODO: unimplemented')),
-    // TODO: prompt for name and remove from parent, add child and add as child
-    vscode.commands.registerCommand(constants.COMMAND_MOVE_IN, () => console.log('TODO: unimplemented')),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_OUT, moveHandler(context, { position: 'out' })),
+    vscode.commands.registerCommand(constants.COMMAND_MOVE_IN, moveHandler(context, { position: 'in' })),
+
+    // TODO: rename note
+    // TODO: delete note
   );
 
   // Ensure `activeNote` stays updated.
