@@ -5,9 +5,9 @@ import vscode from 'vscode';
 function newNotePrompt(type: NewNoteType, note: Note) {
   switch (type) {
     case NewNoteType.Child:
-      return ` Title for new Child of "${note.name}":`;
+      return ` Title for new child of "${note.name}":`;
     case NewNoteType.Sibling:
-      return ` Title for new Sibling of "${note.name}":`;
+      return ` Title for new sibling of "${note.name}":`;
   }
 }
 
@@ -20,7 +20,7 @@ export const newNote = async (context: CommandContext, type: NewNoteType, note: 
 
   const newNote = await note.newNote(type, name);
   if (open) {
-    await note.edit(context);
+    await newNote.edit(context);
   }
 
   return newNote;

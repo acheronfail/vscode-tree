@@ -24,6 +24,11 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "vscode-tree.newNote",
+        "title": "Notes: Create Note",
+        "icon": "$(add)"
+      },
+      {
         "command": "vscode-tree.newChildNote",
         "title": "Notes: New Child"
       },
@@ -78,6 +83,11 @@
       "view/title": [
         {
           "command": "treeView.refresh",
+          "when": "view == treeView",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-tree.newNote",
           "when": "view == treeView",
           "group": "navigation"
         }

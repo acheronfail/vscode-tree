@@ -26,6 +26,10 @@ export async function activate(context: vscode.ExtensionContext) {
     commands.registerCommand(C.CMD_TREEVIEW_REFRESH, () => noteProvider.refresh()),
 
     commands.registerCommand(
+      C.CMD_NEW_NOTE,
+      createHandler(ctx, (c: CommandContext) => newNote(c, NewNoteType.Child, c.rootNote)),
+    ),
+    commands.registerCommand(
       C.CMD_OPEN_NOTE,
       createHandler(ctx, (c, n) => n.edit(c)),
     ),

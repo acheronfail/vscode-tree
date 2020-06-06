@@ -30,6 +30,10 @@ export class Note extends TreeItem {
     return `${name}.md.d`;
   }
 
+  public static nameFromDirPath(filePath: string) {
+    return path.basename(filePath, '.md');
+  }
+
   public static filePathToDirPath(filePath: string) {
     return `${filePath}.d`;
   }
@@ -79,7 +83,7 @@ export class Note extends TreeItem {
 
   public name: string;
   public dirPath: string;
-  public filePath: string;
+  // public filePath: string;
   public depth: number;
 
   public parent?: Note;
@@ -88,11 +92,18 @@ export class Note extends TreeItem {
 
   private context: ExtensionContext;
 
-  private constructor(options: NoteConstructorOptions) {
-    const fileName = path.basename(options.dirPath, '.d');
-    const filePath = path.join(path.dirname(options.dirPath), fileName);
-    const noteName = path.basename(fileName, '.md');
+  get isRootNote() {
+    return this.dirPath === vscode.workspace.rootPath;
+  }
 
+  get filePath() {
+    if (!this.isRootNote) {
+      return Note.dirPathToFilePath(this.dirPath);
+    }
+  }
+
+  private constructor(options: NoteConstructorOptions) {
+    const noteName = Note.nameFromDirPath(options.dirPath);
     const configEntry = options.config.sort[options.dirPath];
 
     // Sort children according to config entry.
@@ -113,7 +124,6 @@ export class Note extends TreeItem {
     this.context = options.context;
     this.name = noteName;
     this.dirPath = options.dirPath;
-    this.filePath = filePath;
     this.config = options.config;
     this.children = sortedChildren;
     this.parent = options.parent;
@@ -165,7 +175,7 @@ export class Note extends TreeItem {
   }
 
   get id(): string {
-    return this.filePath;
+    return this.dirPath;
   }
 
   get iconPath(): ThemeIcon {
@@ -176,11 +186,15 @@ export class Note extends TreeItem {
     return ICONS[iconKey];
   }
 
-  get tooltip(): string {
+  get tooltip() {
     return this.filePath;
   }
 
   async edit(context: CommandContext) {
+    if (this.isRootNote || !this.filePath) {
+      throw new Error('Cannot edit the root note!');
+    }
+
     // Create note file if it doesn't exist.
     await fs.ensureFile(this.filePath);
 
@@ -236,6 +250,10 @@ export class Note extends TreeItem {
   }
 
   private async _rename(newDirPath: string, newFilePath: string) {
+    if (this.isRootNote || !this.filePath) {
+      throw new Error('Cannot rename the root note!');
+    }
+
     // FIXME: when moving in this seems to copy rather than rename?
     await Promise.all([
       vscode.workspace.fs.rename(Uri.parse(this.dirPath), Uri.parse(newDirPath)),
@@ -244,6 +262,10 @@ export class Note extends TreeItem {
   }
 
   private async _copy(newDirPath: string, newFilePath: string) {
+    if (this.isRootNote || !this.filePath) {
+      throw new Error('Cannot copy the root note!');
+    }
+
     await Promise.all([
       vscode.workspace.fs.copy(Uri.parse(this.dirPath), Uri.parse(newDirPath)),
       vscode.workspace.fs.copy(Uri.parse(this.filePath), Uri.parse(newFilePath)),
@@ -251,6 +273,10 @@ export class Note extends TreeItem {
   }
 
   private async _moveToTrash() {
+    if (this.isRootNote || !this.filePath) {
+      throw new Error('Cannot delete the root note!');
+    }
+
     const options = { recursive: true, useTrash: true };
     await Promise.all([
       vscode.workspace.fs.delete(Uri.parse(this.filePath), options),
@@ -337,12 +363,14 @@ export class Note extends TreeItem {
     await this._moveToTrash();
 
     // Close the editor.
-    const fileUri = Uri.parse(this.filePath);
-    for (const editor of vscode.window.visibleTextEditors) {
-      if (editor.document.uri.fsPath === fileUri.fsPath) {
-        // Annoyingly we can't just close an editor, we must first focus it and then execute a command.
-        await vscode.window.showTextDocument(fileUri, { preserveFocus: false, preview: true });
-        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+    if (this.filePath) {
+      const fileUri = Uri.parse(this.filePath);
+      for (const editor of vscode.window.visibleTextEditors) {
+        if (editor.document.uri.fsPath === fileUri.fsPath) {
+          // Annoyingly we can't just close an editor, we must first focus it and then execute a command.
+          await vscode.window.showTextDocument(fileUri, { preserveFocus: false, preview: true });
+          await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+        }
       }
     }
 
@@ -352,6 +380,7 @@ export class Note extends TreeItem {
   }
 
   // TODO: when do _save_ config to disk?
+  // TODO: make paths in config file relative to config file itself
   updateConfigEntry() {
     const { config, dirPath, collapsibleState, children } = this;
     if (!config.sort[dirPath]) {
