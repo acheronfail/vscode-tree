@@ -1,7 +1,7 @@
 import vscode, { TreeItem, TreeItemCollapsibleState, Uri, Command, ThemeIcon, ExtensionContext } from 'vscode';
 import path from 'path';
 import fs, { pathExists } from 'fs-extra';
-import { Config } from './config';
+import { Config, saveConfig } from './config';
 import validFilename from 'valid-filename';
 import { NewNoteType, WorkspaceStateKey, CommandContext } from '../types';
 import { CMD_OPEN_NOTE, ICONS, CMD_TREEVIEW_REFRESH } from '../constants';
@@ -109,7 +109,8 @@ export class Note extends TreeItem {
     // Sort children according to config entry.
     const fsChildren = new Set(options.children);
     const sortedChildren = (configEntry?.children || [])
-      .filter(p => fsChildren.delete(p))
+      .map(relPath => path.resolve(vscode.workspace.rootPath!, relPath))
+      .filter(dirPath => fsChildren.delete(dirPath))
       .concat(...fsChildren.values());
 
     super(
@@ -141,7 +142,7 @@ export class Note extends TreeItem {
         dirPath = makeDirPath(this.dirPath);
         // Insert as last child in parent.
         this.children.push(dirPath);
-        this.updateConfigEntry();
+        await this.updateConfigEntry();
         break;
       case NewNoteType.Sibling:
         dirPath = makeDirPath(path.dirname(this.dirPath));
@@ -153,7 +154,7 @@ export class Note extends TreeItem {
           }
 
           this.parent.children.splice(thisIndex + 1, 0, dirPath);
-          this.parent.updateConfigEntry();
+          await this.parent.updateConfigEntry();
         }
         break;
     }
@@ -351,7 +352,7 @@ export class Note extends TreeItem {
     } else {
       newParent.children.push(newDirPath);
     }
-    newParent.updateConfigEntry();
+    await newParent.updateConfigEntry();
 
     await vscode.commands.executeCommand(CMD_TREEVIEW_REFRESH);
   }
@@ -379,17 +380,28 @@ export class Note extends TreeItem {
     }
   }
 
-  // TODO: when do _save_ config to disk?
-  // TODO: make paths in config file relative to config file itself
-  updateConfigEntry() {
+  async updateConfigEntry() {
     const { config, dirPath, collapsibleState, children } = this;
-    if (!config.sort[dirPath]) {
-      config.sort[dirPath] = {
-        open: collapsibleState === TreeItemCollapsibleState.Expanded,
-        children: [],
-      };
+
+    // We shouldn't be able to get here without a root directory.
+    const rootPath = vscode.workspace.rootPath!;
+
+    // The config path is relative to the config file.
+    const relativeDirPath = path.relative(rootPath, dirPath);
+
+    // No children, so we don't need to save state.
+    if (!children.length) {
+      delete config.sort[relativeDirPath];
+      return;
     }
 
-    config.sort[dirPath]!.children = children.slice();
+    // Save open state and children
+    config.sort[relativeDirPath] = {
+      open: collapsibleState === TreeItemCollapsibleState.Expanded,
+      children: children.slice(),
+    };
+
+    // Save config file.
+    await saveConfig(rootPath, config);
   }
 }

@@ -6,6 +6,7 @@ const INITIAL_CONFIG = {
   sort: {},
 };
 
+// NOTE: must be JSON-serialisable.
 export interface Entry {
   open: boolean;
   children: string[];
@@ -22,4 +23,9 @@ export async function readConfig(rootPath: string): Promise<Config> {
   }
 
   return await fs.readJson(configEntryPath);
+}
+
+export async function saveConfig(rootPath: string, config: Config) {
+  const configEntryPath = path.join(rootPath, CONFIG_FILE_NAME);
+  return await fs.outputJson(configEntryPath, config);
 }

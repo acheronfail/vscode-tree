@@ -69,8 +69,8 @@ export async function moveNote(context: CommandContext, note: Note, options: Mov
   parentNote.children.splice(target, 0, removed);
 
   // Save updated order in as ConfigEntry.
-  parentNote.updateConfigEntry();
+  await parentNote.updateConfigEntry();
 
   // Update the treeview.
-  vscode.commands.executeCommand(constants.CMD_TREEVIEW_REFRESH);
+  await vscode.commands.executeCommand(constants.CMD_TREEVIEW_REFRESH);
 }
