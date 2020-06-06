@@ -204,6 +204,10 @@ export class Note extends TreeItem {
     const filePathUri = Uri.parse(this.filePath);
     await vscode.window.showTextDocument(filePathUri);
 
+    await this.reveal(context);
+  }
+
+  async reveal(context: CommandContext) {
     await context.noteTreeView.reveal(this, {
       expand: true,
       focus: false,

@@ -29,6 +29,10 @@
         "icon": "$(add)"
       },
       {
+        "command": "vscode-tree.revealNote",
+        "title": "Notes: Reveal Note in Tree View"
+      },
+      {
         "command": "vscode-tree.newChildNote",
         "title": "Notes: New Child"
       },

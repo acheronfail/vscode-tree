@@ -8,6 +8,7 @@ export const ID_TREEVIEW = 'treeView';
 
 export const CMD_NEW_NOTE = `${ID_EXTENSION}.newNote`;
 export const CMD_OPEN_NOTE = `${ID_EXTENSION}.openNote`;
+export const CMD_REVEAL_NOTE = `${ID_EXTENSION}.revealNote`;
 export const CMD_NEW_CHILD_NOTE = `${ID_EXTENSION}.newChildNote`;
 export const CMD_NEW_SIBLING_NOTE = `${ID_EXTENSION}.newSiblingNote`;
 export const CMD_DELETE_NOTE = `${ID_EXTENSION}.deleteNote`;
